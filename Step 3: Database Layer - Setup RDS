@@ -6,3 +6,95 @@ Steps to be Performed:
 3- Create the Database Schema
 
 #1 Create an RDS Instance:
+
+In this step, we'll configure an Amazon RDS MySQL instance using the free-tier option to serve as the database for your to-do list application.
+You will also learn how to connect to it using a MySQL client. To do this—
+
+Log in to the AWS Management Console
+Go to the RDS Dashboard by searching for “RDS” in the AWS Console.
+Create a New Database
+Click on Create database to begin the setup.
+Select Database Engine
+Choose MySQL as the database engine. This is the database for your to-do list application.
+
+Engine version: Choose the default MySQL version.
+Template: Select Free Tier to ensure the instance is eligible for the AWS Free Tier.
+
+Configure Database SettingsDB Instance Identifier: Enter a unique name for your database, such as todo-instance.
+Master username: Choose a username (e.g., admin).
+Master password: Create a strong password (note it down).
+Confirm password: Re-enter the password.
+Configure Instance Specifications
+DB Instance Class: Keep it as default.
+Set Up Connectivity
+
+VPC: Select the VPC you created earlier (TodoAppVPC).
+Subnet group: Choose a subnet group that includes your private subnets (this ensures the database will be accessible only from within the VPC).
+Publicly Accessible: Select No (this ensures the database is not publicly accessible).
+VPC Security Group: Select the security group you created earlier (TodoApp-Database-SG), allowing access from the application layer.
+
+Create the Database
+Click Create database to launch the instance. It will take a few minutes for the instance to be provisioned and available.
+
+#2 Connect to the RDS Database Using Bastion Host:
+
+Since your RDS instance is in a private subnet, you cannot directly connect to it from outside the VPC.
+Instead, you will use a Bastion Host (an EC2 instance in a public subnet) to securely access the RDS instance.
+
+1. Launch an EC2 Instance in the public subnet of your VPC. This instance will act as your Bastion Host.
+Go to the EC2 Dashboard and click on Launch Instance.
+Choose an appropriate Amazon Machine Image (AMI)— Amazon Linux 2.
+
+Select an instance type (e.g., t2.micro for free tier eligibility).
+In the Key-pair section, create a new Key pair and give a suitable name to it (For e.g. bastion-host-key). The bastion-host-key.pem file gets downloaded which can be used to SSH into the instances in the further steps
+In the Network section, select your VPC and the public subnet where the Bastion Host will reside.
+Make sure the Auto-assign Public IP option is enabled so that the Bastion Host can be accessed from the public internet.
+For Security Group, you can choose the Webserver-SG
+Leave the rest as defaults and click on Create Instance.
+
+2. SSH into the Bastion Host
+Once the EC2 instance is up and running, you can connect to it via SSH.
+Open your terminal and use the following SSH command to connect to the Bastion Host.
+python
+ssh -i /path/to/your/key.pem ec2-user@<Bastion-Host-EIP>
+Replace /path/to/your/key.pem with the actual path to your downloaded SSH key file, and <Bastion-Host-EIP> with the public IP of the Bastion Host.
+Type yes when it asks— Are you sure you want to continue connecting.
+You have successfully connected to a Bastion Host.
+
+3. Install MySQL Client on the Bastion Host
+To interact with your MySQL RDS instance, you need to install the MySQL client on the Bastion Host.
+For Amazon Linux 2 (or similar):
+python
+sudo wget https://dev.mysql.com/get/mysql80-community-release-el9-1.noarch.rpm 
+sudo dnf install mysql80-community-release-el9-1.noarch.rpm -y
+sudo rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2023
+sudo dnf install mysql-community-client -y
+
+4. Connect to the RDS Instance from the Bastion Host
+Now that you installed MySQL client on Bastion Host, you can securely connect to your RDS instance using the MySQL client.
+Use the following command to connect:
+python
+mysql -h <RDS-endpoint> -P 3306 -u <master-username> -p
+Replace <RDS-endpoint> with the RDS instance endpoint (e.g., todoappdb.xxxxxxxxxxx.us-east-1.rds.amazonaws.com).
+Replace <master-username> with the username you selected during the RDS instance creation (e.g., admin).
+After running the command, you will be prompted to enter the password for the master username. Enter the password you created earlier.
+Once connected, you should see the MySQL prompt (mysql>). You can now execute SQL queries.
+
+
+#3 Create the Database Schema
+1. Access the Database
+After successfully connecting to the RDS instance, create a new database for your application:
+
+CREATE DATABASE TodoAppDB;
+USE TodoAppDB;
+
+2. Create the Tables
+For your to-do list application, create the necessary tables. Here’s an example SQL statement for creating a Tasks table:
+
+CREATE TABLE Tasks (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    task_name VARCHAR(255) NOT NULL,
+    task_description TEXT,
+    due_date DATE NULL,
+    completed BOOLEAN DEFAULT FALSE
+);
