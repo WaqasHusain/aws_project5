@@ -8,5 +8,191 @@ Steps to be Performed:
 
 #1 Launch Two EC2 Instances:
 
-We will be creating two EC2 instances to be added
+We will be creating two EC2 instances to be added.
+1. Navigate to EC2 Dashboard
+Go to the AWS Management Console → Search for EC2.
+Click Launch Instance.
+Provide an appropriate name (For ex: web-server-1)
 
+2. Configure Instance Details
+Choose an Amazon Machine Image (AMI). Select Amazon Linux.
+Select an Instance Type. Choose t2.micro (free tier eligible).
+Key pair: You can use the same key pair that you used for the Bastion Host.
+Network & Subnet ConfigurationVPC: Select TodoAppVPC.
+Subnet: Choose a public subnet. [Public Subnet A]
+Auto-assign Public IP: Enable
+Choose the Webserver SG created earlier.
+Leave the rest as defaults and click on Create Instance.
+Repeat the process to launch a second EC2 instance (web-server-2) in another public subnet [Public subnet B].
+
+#2 Install Dependencies and Setup the Code:
+
+Let us setup the todo list code in the EC2 instances. To do this—
+
+1. Connect to Each EC2 Instance
+Get the Public IP of an EC2 instance from the AWS Console and SSH into it:
+ssh -i /path/to/key.pem ec2-user@<EC2-Public-IP>
+Repeat for the second instance on a new terminal window. You can perform all the below operations simultaneously on both the EC2 instances.
+
+2. Update Packages & Install Node.js
+sudo yum update -y
+sudo yum install git -y
+curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
+sudo yum install -y nodejs
+
+3. Clone the Node.js Application from GitHub
+Navigate to the home directory and clone the backend repository:
+git clone https://github.com/Himanshu-Sangshetti/Todo-Two-Tier.git
+cd Todo-Two-Tier
+
+4. Create a .env File
+Inside the project directory, create a .env file with your database details:
+nano .env
+Add the following contents (replace placeholders with actual values):
+
+DB_HOST="<your-rds-endpoint>"
+DB_USER="<your-db-username>"
+DB_PASSWORD="<your-db-password>"
+DB_NAME="TodoAppDB"
+PORT="3306"
+
+API_BASE_URL="http://<your-alb-dns-name>"
+
+Save the file (CTRL+X → Y → ENTER).
+
+5. Install Dependencies
+npm install
+Use PM2 to Keep the App Running
+Install PM2 (a process manager for Node.js apps):
+python
+sudo npm install -g pm2
+pm2 start index.js
+pm2 startup
+pm2 save
+
+6. Install & Configure Nginx
+sudo yum install nginx -y  # Amazon Linux
+sudo systemctl start nginx
+sudo systemctl enable nginx
+
+7. Configure Nginx as a Reverse Proxy
+Delete the default Nginx config:
+sudo rm /etc/nginx/nginx.conf
+Create a new Nginx configuration file:
+sudo nano /etc/nginx/nginx.conf
+Add the following code in the file:
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    server {
+        listen 80;
+        server_name _;
+
+        location / {
+            proxy_pass http://localhost:3000;  # Assuming Node.js app runs on port 3000
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host $host;
+            proxy_cache_bypass $http_upgrade;
+        }
+
+        location /static/ {
+            root /home/ec2-user/Todo-Two-Tier/public;
+        }
+    }
+}
+
+Save and exit (CTRL + X, then Y, then ENTER).
+
+8. Restart Nginx to Apply Changes
+sudo systemctl restart nginx
+
+9. Check the status of Nginx:
+sudo systemctl status nginx
+
+10. Access the application using the Public IP of your EC2 instance in a browser:
+http://<EC2-Public-IP>
+If everything is set up correctly, your To-Do App should be displayed!
+
+11. Repeat the process on the second EC2 instance
+Connect via SSH.
+Install Node.js, Git, and Nginx.
+Clone the GitHub repo.
+Install dependencies, start the app, and configure Nginx.
+
+#3 Setup a Load Balancer:
+
+Since we have two EC2 instances, we need to configure an Application Load Balancer (ALB) to distribute traffic evenly between them. Follow these steps to set it up:
+1. Navigate to Load Balancers
+
+Go to AWS Management Console → Search for EC2.
+In the left sidebar, click Load Balancers.
+Click Create Load Balancer.
+
+2. Select Load Balancer Type
+Choose Application Load Balancer (ALB).
+Click Create.
+
+3. Configure Load Balancer
+Basic Configuration
+Name: TodoApp-ALB
+Scheme: Internet-facing
+IP Address Type: IPv4
+Network Settings
+VPC: Select TodoAppVPC.
+Availability Zones: Select two public subnets (the ones where your EC2 instances are running).
+
+
+Listeners
+Protocol: HTTP
+Port: 80
+Click Next.
+
+4. Configure Security Group
+Choose Create a New Security Group.
+Name it ALB-SG.
+Select the appropriate VPC.
+Add the following inbound rules:
+Type	Protocol	Port	Source
+HTTP	TCP	80	0.0.0.0/0
+Click Create Security Group.
+Also modify the Web Server Security Group to allow ALB to distribute calls to the web servers.
+Find and select the Webserver-SG used for EC2 instances.
+Click Edit inbound rules.
+Remove any existing HTTP rule with 0.0.0.0/0.
+Add a new rule:
+Type	Protocol	Port	Source	Description
+HTTP	TCP	80	ALB-SG	Allow HTTP traffic from ALB
+Navigate back to the ALB creation and select the newly created ALB-SG.
+
+5. Configure Target Group
+
+In Listeners and Routing section, The ALB will ask you to select a Target Group, for that click on Create Target Group.
+Target Group Name: TodoApp-TG
+Target Type: Instance
+Protocol: HTTP
+Port: 80
+
+Health Check:
+Path: /
+Protocol: HTTP
+
+Click Next.
+Register EC2 Instances
+Select both web-server-1 and web-server-2.
+Click Add to registered → Click Create Target Group, navigate back to the Load Balancer page and select the recently created Target Group.
+
+6. Review & Create Load Balancer
+Review all configurations.
+Click Create Load Balancer.
+Wait a few minutes for the ALB to be provisioned.
+
+7. Test the Setup
+Find the DNS name of the ALB from the Load Balancer console.
+Open it in a browser:
+http://<ALB-DNS-Name>
+You should see your Todo App running!
