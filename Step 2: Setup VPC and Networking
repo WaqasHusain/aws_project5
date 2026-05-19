@@ -10,3 +10,123 @@ Steps to be Performed:
 
 #1 Create a VPC:
 
+To create a secure and isolated environment for your application and database.
+We'll set up a Virtual Private Cloud (VPC) and configure networking components.
+Ensuring high availability with multiple subnets across two availability zones.
+
+Log in to the AWS Management Console.
+Navigate to the VPC Dashboard.
+
+Click Create VPC and select VPC only.
+Configure the following settings:
+Name tag: TodoAppVPC
+IPv4 CIDR block: 10.0.0.0/16
+IPv6 CIDR block: No IPv6 CIDR block.
+Tenancy: Default.
+Click Create VPC.
+
+#2 Create Public and Private Subnets:
+
+Create four subnets across two availability zones—two subnets for the application layer (public subnets)
+And two subnets for the database layer (private subnets).
+
+For Availability Zone 1 (us-east-1a):
+Go to Subnets and click Create subnet.
+Configure the following settings for the public subnet:
+
+Name tag: TodoApp-Subnet-Public-A
+VPC ID: Select TodoAppVPC
+Availability Zone: us-east-1a
+IPv4 CIDR block: 10.0.1.0/24
+Click on Add new subnet.
+Create a private subnet in the same Availability Zone:
+Name tag: TodoApp-Subnet-Private-A
+VPC ID: Select TodoAppVPC
+Availability Zone: us-east-1a
+IPv4 CIDR block: 10.0.2.0/24
+Click on Add new subnet.
+
+For Availability Zone 2 (us-east-1b):
+Repeat the process for public subnet in us-east-1b:
+Name tag: TodoApp-Subnet-Public-B
+VPC ID: Select TodoAppVPC
+Availability Zone: us-east-1b
+IPv4 CIDR block: 10.0.3.0/24
+Click on Add new subnet.
+Create a private subnet in us-east-1b:
+Name tag: TodoApp-Subnet-Private-B
+VPC ID: Select TodoAppVPC
+Availability Zone: us-east-1b
+IPv4 CIDR block: 10.0.4.0/24
+Click Create subnet. Ensure you have 4 subnets created: 
+
+#3 Create an Internet Gateway (IGW):
+
+Go to Internet Gateways in the VPC Dashboard.
+Click Create internet gateway.
+Enter a name tag: TodoApp-IGW.
+Click Create internet gateway.
+Attach the IGW to the TodoAppVPC:
+Select the created IGW.
+Click Actions > Attach to VPC and choose TodoAppVPC.
+
+#4 Configure Route Tables:
+
+We need to configure Route tables to handle the communication between these subnets. To do this-
+For Public Subnets:
+
+1. In the VPC Dashboard, go to Route Tables.
+2. Click Create route table.
+3. Configure the following settings:
+Name tag: TodoApp-Public-Route-Table
+VPC: Select TodoAppVPC
+4. Click Create route table.
+5. Add a route to the IGW:
+Select the route table and click the Routes tab.
+Click Edit routes and add:
+Destination: 0.0.0.0/0.
+Target: Select the TodoApp-IGW.
+Click Save routes.
+6. Associate the public subnets (TodoApp-Subnet-Public-A and TodoApp-Subnet-Public-B) with this route table:
+Go to the Subnet Associations tab.
+Click Edit subnet associations and select both TodoApp-Subnet-Public-A and TodoApp-Subnet-Public-B.
+Click Save associations.
+
+For Private Subnets:
+
+1. Create a new route table for the private subnets (no IGW access).
+Click Create route table.
+Name tag: TodoApp-Private-Route-Table
+VPC: Select TodoAppVPC
+2. Click Create route table.
+3. Associate the private subnets (TodoApp-Subnet-Private-A and TodoApp-Subnet-Private-B) with this route table:
+Go to the Subnet Associations tab.
+Click Edit subnet associations and select both TodoApp-Subnet-Private-A and TodoApp-Subnet-Private-B.
+Click Save associations.
+
+#5 Configure Security Groups:
+
+Lets create Security Groups for Webserver instances and the Database to be associated with the public and private subnets respectively.
+To do this—
+
+1. Go to Security Groups in the VPC Dashboard.
+2. Create a Security Group for Web Server
+Go to the AWS Management Console → Navigate to EC2 → Security Groups.
+Click Create Security Group and configure as follows:
+Name: Webserver-SG
+VPC: Select the correct VPC.
+Configure Inbound Rules
+Type	Protocol	Port Range	Source	Description (Optional)
+MySQL/Aurora	TCP	3306	0.0.0.0/0	Allow DB connections
+SSH	TCP	22	0.0.0.0/0	Allow SSH access
+HTTP	TCP	80	0.0.0.0/0	Allow Web Traffic
+Click Create Security Group.
+3. Create a security group for the database layer:
+Name tag: TodoApp-Database-SG
+VPC: Select TodoAppVPC
+4. Add the following inbound rules:
+Type: MySQL/Aurora
+Protocol: TCP
+Port Range: 3306
+Source: Select Webserver-SG
+Click on Create Security Group.
