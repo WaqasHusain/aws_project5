@@ -1,0 +1,12 @@
+Setup VPC and Networking
+
+Steps to be Performed:
+
+1- Create a VPC
+2- Create Public and Private Subnets
+3- Create an Internet Gateway (IGW)
+4- Configure Route Tables
+5- Configure Security Groups
+
+#1 Create a VPC:
+
