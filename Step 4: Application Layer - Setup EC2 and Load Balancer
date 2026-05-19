@@ -1,0 +1,12 @@
+Application Layer - Setup EC2 and Load Balancer
+
+Steps to be Performed:
+
+1- Launch two EC2 Instances
+2- Install Dependencies and Setup the Code
+3- Setup a Load Balancer
+
+#1 Launch Two EC2 Instances:
+
+We will be creating two EC2 instances to be added
+
