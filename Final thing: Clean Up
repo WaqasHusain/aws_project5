@@ -1,0 +1,22 @@
+Clean Up:
+
+Delete ALB:
+Navigate to the EC2 Console, go to the Load Balancers section, and delete the ALB.
+
+Terminate EC2 Instances:
+In the EC2 Console, stop and terminate the 2 Webserver instances and the Bastion Host instance.
+
+Delete RDS Instance:
+In the RDS Console, delete the database instance, ensuring backups are created if needed.
+
+Detach and Delete IGW:
+In the VPC Console, detach and delete the Internet Gateway from the VPC.
+
+Delete Subnets and Route Tables:
+Remove all subnets and route tables associated with the project in the VPC Console.
+
+Delete Security Groups:
+Navigate to the EC2 Console, and delete custom security groups created for this project.
+
+Delete VPC:
+Ensure all dependencies are removed, then delete the VPC.
