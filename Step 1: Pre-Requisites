@@ -3,3 +3,58 @@ Steps to be Performed:
 1- AWS Account
 2- Installing SQL Client
 3- Cloning the To-Do List Application Code
+
+#1 AWS Account:
+
+Sign in to your existing AWS account, or create a new one here.
+https://aws.amazon.com/free/
+Ensure your account has permissions to create and manage Elastic Beanstalk, Amazon RDS, VPC, and related resources.
+
+#2 Installing SQL Client:
+
+You'll need an SQL client to connect to the RDS database. Follow the steps for your operating system:
+
+For Windows:
+Download MySQL Installer from here.
+https://dev.mysql.com/downloads/installer/
+Run the installer and select MySQL Workbench during the setup.
+Complete the installation.
+Open MySQL Workbench and verify the installation.
+
+For Linux:
+Open your terminal.
+Install MySQL Workbench using the following command:
+sudo apt update
+sudo apt install mysql-workbench
+
+For Red Hat-based distros (e.g., CentOS):
+sudo yum install mysql-workbench
+Launch MySQL Workbench from the applications menu.
+
+For macOS:
+Download MySQL Workbench DMG from here.
+https://dev.mysql.com/downloads/workbench/
+Open the downloaded file and drag MySQL Workbench to the Applications folder.
+Open MySQL Workbench and verify the installation.
+
+#3 Cloning the To-Do List Application Code:
+
+The source code for the to-do list application is available. Follow these steps to clone the repository:
+
+Install Git if it's not already installed:
+For Windows: Download and install Git from here.
+https://git-scm.com/
+
+For Linux:
+sudo apt install git
+
+For macOS:
+brew install git
+Clone the repository using the following command:
+git clone https://github.com/techwithlucy/zero-to-cloud.git
+
+Navigate to the cloned directory:
+cd projects
+cd intermediate
+cd project5
+
