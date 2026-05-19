@@ -1,0 +1,8 @@
+Database Layer - Setup RDS
+Steps to be Performed:
+
+1- Create an RDS Instance
+2- Connect to the RDS Database Using Bastion Host
+3- Create the Database Schema
+
+#1 Create an RDS Instance:
